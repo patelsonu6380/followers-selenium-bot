@@ -1,0 +1,26 @@
+name: Run Selenium Bot - Set 3
+
+on:
+  schedule:
+    - cron: '30 20,2,8,14 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: selenium-bot-lock
+  cancel-in-progress: false
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: |
+          pip install --upgrade pip
+          pip install selenium webdriver-manager firebase-admin
+      - name: Run Bot
+        env:
+          FIREBASE_KEY_JSON: ${{ secrets.FIREBASE_KEY_JSON }}
+        run: python bot.py
