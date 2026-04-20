@@ -23,7 +23,7 @@ from websites import WEBSITES
 
 FOLLOWERS_TOOL_PATH = "/tools/send-follower"
 TOTAL_CYCLES_PER_ACCOUNT = 4  # Kitni baar websites ka loop chalana hai ek account se
-TARGET_DELAY_RANGE = (5, 5) # Delay between websites
+TARGET_DELAY_RANGE = (10, 10) # Delay between websites
 
 # ============================================================
 # 2. DRIVER SETUP
@@ -31,9 +31,8 @@ TARGET_DELAY_RANGE = (5, 5) # Delay between websites
 
 options = webdriver.ChromeOptions()
 
-# ❌ headless REMOVED
-
-# Linux / GitHub Actions related (safe to keep)
+# 🔴 REQUIRED for GitHub Actions / Linux
+options.add_argument("--headless=new")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--disable-gpu")
@@ -46,11 +45,11 @@ options.add_argument("--disable-blink-features=AutomationControlled")
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
 options.add_experimental_option("useAutomationExtension", False)
 
+
 driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install()),
     options=options
 )
-
 wait = WebDriverWait(driver, 15)
 SITE_TABS = {}
 
