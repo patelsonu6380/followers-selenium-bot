@@ -1,14 +1,27 @@
 # ============================================================
 # targets.py
-# Local targets only (Firebase removed)
+# Firebase-backed but bot.py compatible
 # ============================================================
 
-# ================= CONFIG =================
-# Add target usernames here
-TARGET_USERS = [ 
-    "iam_harshit_shukal",
+import firebase_init
+from firebase_admin import db
 
-]
+def _load_targets():
+    ref = db.reference("targets")
+    data = ref.get() or {}
 
-if not TARGET_USERS:
-    raise Exception("ERROR: No targets found in targets.py")
+    targets = []
+
+    # Firebase values simple string hain
+    for v in data.values():
+        if isinstance(v, str) and v.strip():
+            targets.append(v.strip())
+
+    if not targets:
+        raise Exception("❌ No targets found in Firebase")
+
+    return targets
+
+
+# 🔥 EXACT SAME VARIABLE bot.py expects
+TARGET_USERS = _load_targets()
