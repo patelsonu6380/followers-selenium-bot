@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GitHub Accounts Manager</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:20px}
+    .card{border:1px solid #ddd;padding:12px;margin-bottom:12px;border-radius:6px}
+    input,button,textarea{font-size:14px;padding:8px;margin:4px 0;width:100%}
+    .row{display:flex;gap:8px}
+    .row > *{flex:1}
+    .small{width:120px}
+    ul{padding-left:18px}
+    .meta{color:#666;font-size:13px}
+  </style>
+</head>
+<body>
+  <h2>GitHub Accounts — Add / Manage / Run</h2>
+
+  <div class="card">
+    <strong>Add GitHub Account</strong>
+    <div class="meta">Store tokens locally in this browser (localStorage). For server use, export and send to your backend securely.</div>
+    <input id="username" placeholder="Username (optional)" />
+    <input id="token" placeholder="Personal access token (ghp_xxx)" />
+    <input id="note" placeholder="Note (optional)" />
+    <div class="row">
+      <button id="addBtn">Add Account</button>
+      <button id="clearBtn">Clear All</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <strong>Accounts</strong>
+    <ul id="accountsList"></ul>
+  </div>
+
+  <div class="card">
+    <strong>Targets</strong>
+    <div class="meta">Enter targets (username/URL/etc.) — one per line.</div>
+    <textarea id="targets" rows="4" placeholder="one target per line"></textarea>
+  </div>
+
+  <div class="card">
+    <strong>Run / Export</strong>
+    <input id="endpoint" placeholder="Backend endpoint (default: /run)" value="/run" />
+    <div class="row">
+      <button id="runBtn">Run (POST to endpoint)</button>
+      <button id="exportBtn">Export JSON</button>
+    </div>
+    <div class="row">
+      <button id="importBtn">Import JSON</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none" />
+    </div>
+    <pre id="result" style="white-space:pre-wrap;margin-top:8px"></pre>
+  </div>
+
+  <script>
+    const key = 'gh_accounts_v1'
+    const accountsList = document.getElementById('accountsList')
+    const addBtn = document.getElementById('addBtn')
+    const clearBtn = document.getElementById('clearBtn')
+    const runBtn = document.getElementById('runBtn')
+    const exportBtn = document.getElementById('exportBtn')
+    const importBtn = document.getElementById('importBtn')
+    const importFile = document.getElementById('importFile')
+    const result = document.getElementById('result')
+
+    function load(){
+      try{ return JSON.parse(localStorage.getItem(key) || '[]') }catch(e){return []}
+    }
+    function save(list){ localStorage.setItem(key, JSON.stringify(list)) }
+
+    function render(){
+      const list = load()
+      accountsList.innerHTML = ''
+      if(!list.length) accountsList.innerHTML = '<li class="meta">No accounts added yet.</li>'
+      list.forEach((a,i)=>{
+        const li = document.createElement('li')
+        li.innerHTML = `<strong>${a.username||'—'}</strong> <span class="meta">${a.note||''}</span><div class="row small-actions" style="margin-top:6px"><button data-i="${i}" class="useBtn">Use</button><button data-i="${i}" class="delBtn">Delete</button></div>`
+        accountsList.appendChild(li)
+      })
+      attachListHandlers()
+    }
+
+    function attachListHandlers(){
+      document.querySelectorAll('.delBtn').forEach(b=>b.onclick = e=>{
+        const i = +e.target.dataset.i
+        const list = load(); list.splice(i,1); save(list); render()
+      })
+      document.querySelectorAll('.useBtn').forEach(b=>b.onclick = e=>{
+        const i = +e.target.dataset.i
+        const a = load()[i]
+        document.getElementById('username').value = a.username||''
+        document.getElementById('token').value = a.token||''
+        document.getElementById('note').value = a.note||''
+      })
+    }
+
+    addBtn.onclick = ()=>{
+      const u = document.getElementById('username').value.trim()
+      const t = document.getElementById('token').value.trim()
+      const n = document.getElementById('note').value.trim()
+      if(!t){ alert('Token required'); return }
+      const list = load()
+      list.push({username:u, token:t, note:n})
+      save(list); render()
+      document.getElementById('username').value='';document.getElementById('token').value='';document.getElementById('note').value=''
+    }
+
+    clearBtn.onclick = ()=>{ if(confirm('Clear all saved accounts?')){ localStorage.removeItem(key); render() } }
+
+    runBtn.onclick = async ()=>{
+      const endpoint = (document.getElementById('endpoint').value||'/run').trim()
+      const payload = { accounts: load(), targets: (document.getElementById('targets').value||'').split('\n').map(s=>s.trim()).filter(Boolean) }
+      if(!payload.accounts.length){ alert('Add at least one account'); return }
+      if(!payload.targets.length){ if(!confirm('No targets set. Continue?')) return }
+      result.textContent = 'Sending POST to ' + endpoint + ' ...'
+      try{
+        const res = await fetch(endpoint, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)})
+        const text = await res.text()
+        result.textContent = 'Response ('+res.status+'):\n'+text
+      }catch(err){ result.textContent = 'Network/error: '+err }
+    }
+
+    exportBtn.onclick = ()=>{
+      const data = { accounts: load(), targets: (document.getElementById('targets').value||'').split('\n').map(s=>s.trim()).filter(Boolean) }
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'})
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a'); a.href = url; a.download = 'gh_accounts_export.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url)
+    }
+
+    importBtn.onclick = ()=> importFile.click()
+    importFile.onchange = e=>{
+      const f = e.target.files[0]; if(!f) return
+      const r = new FileReader(); r.onload = ev=>{
+        try{
+          const obj = JSON.parse(ev.target.result)
+          if(obj.accounts) save(obj.accounts)
+          if(obj.targets) document.getElementById('targets').value = obj.targets.join('\n')
+          render(); alert('Import successful')
+        }catch(err){ alert('Invalid JSON') }
+      }
+      r.readAsText(f)
+      importFile.value = ''
+    }
+
+    // initial render
+    render()
+  </script>
+</body>
+</html>
