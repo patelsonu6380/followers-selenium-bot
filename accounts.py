@@ -14,7 +14,7 @@ from firebase_admin import db
 
 # ================= CONFIG =================
 COOLDOWN_SECONDS = 90 * 60      # 1.5 hours temporary lock
-MAX_ACCOUNTS = 1               # bot max 1 accounts
+MAX_ACCOUNTS = 1               # bot max 2 accounts
 MIN_ACCOUNTS = 1               # at least 1 required
 MAX_FAILS = 15                 # 🔥 permanent block limit
 

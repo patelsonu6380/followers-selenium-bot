@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 # AUTO FOLLOWER SENDER SCRIPT (DISTRIBUTED TARGETS VERSION)
 # Logic: 1 Site = 1 Target (Round Robin), 4 Cycles per Account
 # ============================================================
@@ -31,7 +31,7 @@ TARGET_DELAY_RANGE = (10, 10) # Delay between websites
 
 options = webdriver.ChromeOptions()
 
-# 🔴 REQUIRED for GitHub Actions / Linux
+# ðŸ”´ REQUIRED for GitHub Actions / Linux
 options.add_argument("--headless=new")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
@@ -66,7 +66,7 @@ def get_root(url):
 
 def close_popups():
     selectors = [
-        "//button[contains(text(),'×')]",
+        "//button[contains(text(),'Ã—')]",
         "//button[@class='close']",
         "//div[@class='modal-footer']//button",
         "//a[@class='close']"
@@ -86,7 +86,7 @@ def close_popups():
 # ============================================================
 
 def open_all_tabs():
-    log("🚀 Opening all website tabs...")
+    log("ðŸš€ Opening all website tabs...")
     first = True
     for site in WEBSITES:
         if first:
@@ -97,10 +97,10 @@ def open_all_tabs():
             time.sleep(1.0)
         
         SITE_TABS[site["name"]] = driver.window_handles[-1]
-        log(f"🧩 Tab opened -> {site['name']}")
+        log(f"ðŸ§© Tab opened -> {site['name']}")
 
 def clear_cookies_and_reload():
-    log("\n🧹 Cleaning up: Clearing cookies on all tabs...")
+    log("\nðŸ§¹ Cleaning up: Clearing cookies on all tabs...")
     for site in WEBSITES:
         try:
             handle = SITE_TABS.get(site["name"])
@@ -111,9 +111,9 @@ def clear_cookies_and_reload():
             time.sleep(0.5)
             driver.get(site["login_url"])
             time.sleep(1)
-            log(f"🍪 Reset -> {site['name']}")
+            log(f"ðŸª Reset -> {site['name']}")
         except Exception as e:
-            log(f"⚠️ Reset error {site['name']}: {e}")
+            log(f"âš ï¸ Reset error {site['name']}: {e}")
 
 # ============================================================
 # 5. CORE LOGIC
@@ -145,11 +145,11 @@ def has_zero_credit():
             return True
         
         credit = int(re.sub(r"\D", "", credit_text))
-        log(f"💰 Current Credit: {credit}")
+        log(f"ðŸ’° Current Credit: {credit}")
         
         return credit <= 0
     except:
-        log("⚠️ Credit element not found. Assuming 0 to skip.")
+        log("âš ï¸ Credit element not found. Assuming 0 to skip.")
         return True
 
 
@@ -182,28 +182,28 @@ def login_with_account(account, root):
         driver.execute_script("arguments[0].click();", btn)
         time.sleep(8)
 
-        # 🔍 LOGIN RESULT
+        # ðŸ” LOGIN RESULT
         if is_login_really_success(root):
-            log(f"✅ LOGIN SUCCESS: {account['user']}")
+            log(f"âœ… LOGIN SUCCESS: {account['user']}")
 
-            # ✅ reset fail counter
+            # âœ… reset fail counter
             if "_id" in account:
                 register_login_success(account["_id"])
 
             return True
         else:
-            log(f"❌ LOGIN FAILED: {account['user']}")
+            log(f"âŒ LOGIN FAILED: {account['user']}")
 
-            # 🔥 increase fail counter
+            # ðŸ”¥ increase fail counter
             if "_id" in account:
                 register_login_fail(account["_id"])
 
             return False
 
     except Exception as e:
-        log(f"❌ Login Error: {e}")
+        log(f"âŒ Login Error: {e}")
 
-        # 🔥 count exception as login fail
+        # ðŸ”¥ count exception as login fail
         if "_id" in account:
             register_login_fail(account["_id"])
 
@@ -221,7 +221,7 @@ def send_followers_single_target(root, target):
 
     # CREDIT CHECK
     if has_zero_credit():
-        log("🚫 Credit is 0.")
+        log("ðŸš« Credit is 0.")
         return "NO_CREDIT"
 
     try:
@@ -246,11 +246,11 @@ def send_followers_single_target(root, target):
         )
         driver.execute_script("arguments[0].click();", start_btn)
         
-        log(f"⚡ Sent Request -> {target}")
+        log(f"âš¡ Sent Request -> {target}")
         return True
         
     except Exception as e:
-        log(f"⚠️ Failed to send to {target}: {e}")
+        log(f"âš ï¸ Failed to send to {target}: {e}")
         return False
 
 # ============================================================
@@ -264,20 +264,20 @@ if __name__ == "__main__":
     try:
         for account in LOGIN_ACCOUNTS:
             log(f"\n==========================================")
-            log(f"👤 LOGGING IN ACCOUNT: {account['user']}")
+            log(f"ðŸ‘¤ LOGGING IN ACCOUNT: {account['user']}")
             log(f"==========================================")
 
             target_counter = 0
-            SKIP_WEBSITES = set()   # ✅ RESET FOR EACH ACCOUNT
+            SKIP_WEBSITES = set()   # âœ… RESET FOR EACH ACCOUNT
 
             for cycle in range(1, TOTAL_CYCLES_PER_ACCOUNT + 1):
-                log(f"\n🔄 STARTING CYCLE {cycle}/{TOTAL_CYCLES_PER_ACCOUNT}")
+                log(f"\nðŸ”„ STARTING CYCLE {cycle}/{TOTAL_CYCLES_PER_ACCOUNT}")
                 log("------------------------------------------")
 
                 for site in WEBSITES:
-                    # 🚫 Skip if credit was 0 earlier
+                    # ðŸš« Skip if credit was 0 earlier
                     if site["name"] in SKIP_WEBSITES:
-                        log(f"⏭️ Skipped {site['name']} (No Credit earlier)")
+                        log(f"â­ï¸ Skipped {site['name']} (No Credit earlier)")
                         continue
 
                     driver.switch_to.window(SITE_TABS[site["name"]])
@@ -288,41 +288,35 @@ if __name__ == "__main__":
                         continue
 
                     current_target = TARGET_USERS[target_counter % len(TARGET_USERS)]
-                    log(f"\n🌍 Site: {site['name']} --> 🎯 Target: {current_target}")
+                    log(f"\nðŸŒ Site: {site['name']} --> ðŸŽ¯ Target: {current_target}")
 
-                    success = False
+                    result = send_followers_single_target(root, current_target)
 
-                    while not success:
-                        result = send_followers_single_target(root, current_target)
+                    # Credit 0 -> skip this site for remaining cycles
+                    if result == "NO_CREDIT":
+                        SKIP_WEBSITES.add(site["name"])
+                        log(f"{site['name']} marked SKIP for remaining cycles")
 
-                        # 🚫 Credit 0 → skip this site for remaining cycles
-                        if result == "NO_CREDIT":
-                            SKIP_WEBSITES.add(site["name"])
-                            log(f"🚫 {site['name']} marked SKIP for remaining cycles")
-                            break
+                    # Failed request -> skip this username and move to next one
+                    elif result is False:
+                        log(f"Skipped target due to send failure: {current_target}")
+                        target_counter += 1
 
-                        # 🔁 Retry same target if failed
-                        if result is False:
-                            log(f"🔁 Retry same target: {current_target}")
-                            time.sleep(5)
-                            continue
-
-                        # ✅ Success → next target
-                        if result is True:
-                            success = True
-                            target_counter += 1
+                    # Success -> next target
+                    elif result is True:
+                        target_counter += 1
 
                     # Delay only after success or skip
                     delay = random.uniform(*TARGET_DELAY_RANGE)
-                    log(f"⏳ Waiting {delay:.1f}s...")
+                    log(f"â³ Waiting {delay:.1f}s...")
                     time.sleep(delay)
 
-            log(f"\n✅ Finished 4 Cycles for {account['user']}")
+            log(f"\nâœ… Finished 4 Cycles for {account['user']}")
             clear_cookies_and_reload()
             time.sleep(5)
 
     except KeyboardInterrupt:
-        log("\n🛑 Script stopped by user.")
+        log("\nðŸ›‘ Script stopped by user.")
     finally:
-        log("👋 Exiting...")
+        log("ðŸ‘‹ Exiting...")
         driver.quit()
